@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lahore Route Finder </title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --pink:      #ffb3c6;
+  --pink-dark: #ff85a1;
+  --peach:     #ffd6a5;
+  --yellow:    #fdffb6;
+  --mint:      #caffbf;
+  --mint-dark: #70e000;
+  --sky:       #a0c4ff;
+  --lavender:  #bdb2ff;
+  --bg:        #fff5f7;
+  --card:      #ffffff;
+  --text:      #5c3d4e;
+  --muted:     #b08a98;
+  --border:    #fce4ec;
+  --shadow:    rgba(255,133,161,0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255,179,198,0.3) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(160,196,255,0.25) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(202,255,191,0.15) 0%, transparent 60%);
+}
+
+/* floating blobs */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.4;
+  pointer-events: none;
+  animation: float 8s ease-in-out infinite;
+}
+.blob-1 { width:300px; height:300px; background:var(--pink); top:-80px; left:-80px; animation-delay:0s; }
+.blob-2 { width:250px; height:250px; background:var(--sky); bottom:-60px; right:-60px; animation-delay:3s; }
+.blob-3 { width:200px; height:200px; background:var(--mint); top:40%; left:60%; animation-delay:5s; }
+
+@keyframes float {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-20px) scale(1.05); }
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  padding: 36px 20px 20px;
+  position: relative;
+}
+.header-emoji { font-size: 48px; display: block; margin-bottom: 8px; animation: bounce 2s ease-in-out infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+header h1 {
+  font-family: 'Nunito', sans-serif;
+  font-size: 32px; font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+header h1 span { color: var(--pink-dark); }
+header p { color: var(--muted); font-size: 14px; margin-top: 6px; font-family: 'Quicksand', sans-serif; font-weight: 500; }
+
+/* MAIN LAYOUT */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+
+/* CARD */
+.card {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 4px 24px var(--shadow), 0 1px 4px rgba(0,0,0,0.04);
+  border: 1.5px solid var(--border);
+}
+
+/* FORM */
+.label {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 8px; display: block;
+}
+.select-wrap { position: relative; margin-bottom: 12px; }
+.select-wrap::after {
+  content: '▾';
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--pink-dark); pointer-events: none; font-size: 12px;
+}
+select {
+  width: 100%;
+  padding: 12px 36px 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: #fff9fb;
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; outline: none;
+  appearance: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+select:focus { border-color: var(--pink-dark); box-shadow: 0 0 0 3px rgba(255,133,161,0.15); }
+
+.swap-row { display: flex; justify-content: center; margin: 4px 0 8px; }
+.swap-btn {
+  background: linear-gradient(135deg, var(--pink), var(--lavender));
+  border: none; border-radius: 50%;
+  width: 36px; height: 36px;
+  font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(255,133,161,0.3);
+  transition: transform 0.3s, box-shadow 0.2s;
+}
+.swap-btn:hover { transform: rotate(180deg); box-shadow: 0 6px 16px rgba(255,133,161,0.4); }
+
+.find-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--pink-dark), #ff6b95);
+  color: #fff;
+  border: none; border-radius: 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 16px; font-weight: 800;
+  cursor: pointer; letter-spacing: 0.02em;
+  box-shadow: 0 6px 20px rgba(255,133,161,0.4);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  margin-top: 4px;
+}
+.find-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,133,161,0.5); }
+.find-btn:active { transform: translateY(0); }
+.find-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* RESULT */
+.result-card {
+  margin-top: 16px;
+  background: linear-gradient(135deg, #fff0f5, #f0f7ff);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  display: none;
+  animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.result-card.show { display: block; }
+.result-card.error { background: #fff5f5; border-color: #ffcccc; }
+@keyframes popIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+
+.dist-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, var(--mint), #b7f5a0);
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 22px; font-weight: 900; color: #2d6a1f;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px rgba(112,224,0,0.2);
+}
+
+.path-steps { display: flex; flex-direction: column; gap: 2px; }
+.step-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0;
+  animation: stepIn 0.3s ease both;
+}
+@keyframes stepIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.step-icon { font-size: 16px; flex-shrink: 0; }
+.step-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
+.step-km { font-size: 11px; color: var(--muted); font-family: 'Quicksand', sans-serif; }
+.step-arrow { color: var(--pink); font-size: 10px; }
+
+/* STATUS */
+.status-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 6px;
+  animation: pulse 2s infinite;
+}
+.status-dot.online { background: var(--mint-dark); }
+.status-dot.offline { background: #ff6b6b; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.api-status {
+  font-size: 11px; font-family: 'Quicksand', sans-serif;
+  color: var(--muted); margin-top: 14px;
+  display: flex; align-items: center;
+}
+
+/* CANVAS */
+.map-card { padding: 0; overflow: hidden; position: relative; min-height: 500px; }
+canvas { display: block; width: 100%; height: 100%; border-radius: 24px; }
+
+.map-legend {
+  position: absolute; bottom: 16px; left: 16px;
+  background: rgba(255,255,255,0.92);
+  border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+  backdrop-filter: blur(8px);
+}
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text); font-weight: 600; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.algo-tag {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(255,255,255,0.92);
+  border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 6px 14px;
+  font-size: 11px; font-family: 'Quicksand', sans-serif;
+  color: var(--muted); font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+.algo-tag span { color: var(--pink-dark); font-weight: 700; }
+
+/* LOADING spinner */
+.spinner {
+  display: none; width: 20px; height: 20px;
+  border: 3px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media(max-width: 768px) {
+  .container { grid-template-columns: 1fr; }
+  .map-card { min-height: 320px; }
+}
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<header>
+  <span class="header-emoji">🗺️</span>
+  <h1>Lahore <span>Route</span> Finder</h1>
+  <p>Find the shortest path between Lahore landmarks </p>
+</header>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <div>
+    <div class="card">
+      <label class="label"> Starting point</label>
+      <div class="select-wrap">
+        <select id="srcSelect"><option>Loading...</option></select>
+      </div>
+
+      <div class="swap-row">
+        <button class="swap-btn" onclick="swapLocations()" title="Swap locations">⇅</button>
+      </div>
+
+      <label class="label"> Destination</label>
+      <div class="select-wrap">
+        <select id="destSelect"><option>Loading...</option></select>
+      </div>
+
+      <button class="find-btn" id="findBtn" onclick="findRoute()">
+        <span id="btnText"> Find Route</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+      <div class="result-card" id="resultCard">
+        <div id="resultContent"></div>
+      </div>
+
+      <div class="api-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting to backend...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="card map-card">
+    <canvas id="mapCanvas"></canvas>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ff85a1"></div> Source</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#bdb2ff"></div> Destination</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#70e000"></div> Shortest path</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e8d5db;border:1.5px solid #ffb3c6"></div> Location</div>
+    </div>
+    <div class="algo-tag">Algorithm: <span>Dijkstra's</span> · O((V+E) log V)</div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const API = 'http://localhost:8080/api';
+
+// ── GRAPH POSITIONS (canvas %) ────────────────────────────────
+const nodePos = [
+  [0.42, 0.52], // Gulberg
+  [0.45, 0.42], // Liberty Market
+  [0.53, 0.35], // Mall Road
+  [0.60, 0.28], // Badshahi Mosque
+  [0.57, 0.38], // Anarkali Bazaar
+  [0.28, 0.68], // DHA Phase 5
+  [0.30, 0.55], // Johar Town
+  [0.15, 0.78], // Airport
+  [0.63, 0.45], // Railway Station
+  [0.35, 0.48], // Model Town
+];
+
+const edgeList = [
+  [0,1,1.5],[1,2,2.1],[2,3,1.8],[3,4,0.9],[4,8,1.2],
+  [2,8,2.4],[0,9,3.0],[9,6,2.5],[6,5,4.1],[5,7,6.2],
+  [0,6,5.0],[1,4,3.3],[7,9,8.5]
+];
+
+const nodeColors = [
+  '#ffb3c6','#ffd6a5','#fdffb6','#caffbf','#a0c4ff',
+  '#bdb2ff','#ffc6ff','#ffadad','#b9fbc0','#e0c3fc'
+];
+
+let locations = [];
+let currentPath = [];
+let currentSrc = -1;
+let currentDest = -1;
+
+// ── CANVAS ────────────────────────────────────────────────────
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = rect.width;
+  canvas.height = Math.max(rect.height, 500);
+  drawGraph();
+}
+
+function nx(i) { return nodePos[i][0] * canvas.width; }
+function ny(i) { return nodePos[i][1] * canvas.height; }
+
+function drawGraph() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // pastel background
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#fff5f7');
+  grad.addColorStop(1, '#f0f4ff');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const pathSet = new Set(currentPath);
+  const pathEdges = new Set();
+  for (let i = 0; i < currentPath.length - 1; i++) {
+    pathEdges.add(`${currentPath[i]}-${currentPath[i+1]}`);
+    pathEdges.add(`${currentPath[i+1]}-${currentPath[i]}`);
+  }
+
+  // Draw edges
+  edgeList.forEach(([u, v, w]) => {
+    const onPath = pathEdges.has(`${u}-${v}`);
+    ctx.beginPath();
+    ctx.moveTo(nx(u), ny(u));
+    ctx.lineTo(nx(v), ny(v));
+
+    if (onPath) {
+      ctx.strokeStyle = '#70e000';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#70e000';
+      ctx.shadowBlur = 10;
+      ctx.setLineDash([]);
+    } else {
+      ctx.strokeStyle = '#fce4ec';
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 0;
+      ctx.setLineDash([5, 4]);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // weight label
+    const mx = (nx(u)+nx(v))/2, my = (ny(u)+ny(v))/2;
+    ctx.fillStyle = onPath ? '#2d6a1f' : '#c9a0ac';
+    ctx.font = `${onPath ? '700' : '500'} 10px Nunito, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${w}km`, mx, my - 6);
+  });
+
+  // Draw nodes
+  if (locations.length === 0) return;
+  locations.forEach((loc, id) => {
+    const x = nx(id), y = ny(id);
+    const onPath = pathSet.has(id);
+    const isSrc  = id === currentSrc;
+    const isDest = id === currentDest;
+    const r = (isSrc || isDest) ? 18 : onPath ? 15 : 11;
+
+    // glow
+    if (isSrc || isDest || onPath) {
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = isSrc ? '#ff85a1' : isDest ? '#bdb2ff' : '#70e000';
+    }
+
+    // circle
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    if (isSrc) {
+      ctx.fillStyle = '#ff85a1';
+    } else if (isDest) {
+      ctx.fillStyle = '#bdb2ff';
+    } else if (onPath) {
+      ctx.fillStyle = '#caffbf';
+    } else {
+      ctx.fillStyle = nodeColors[id % nodeColors.length];
+    }
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // emoji on src/dest
+    if (isSrc) {
+      ctx.font = '14px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('', x, y + 5);
+    } else if (isDest) {
+      ctx.font = '14px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('', x, y + 5);
+    }
+
+    // label
+    const offsets = [[0,-26],[0,-26],[0,-26],[0,-26],[20,-20],[-22,26],[22,20],[0,30],[22,-20],[0,-26]];
+    const [ox, oy] = offsets[id] || [0,-24];
+    ctx.font = `${onPath ? '800' : '600'} 12px Nunito, sans-serif`;
+    ctx.fillStyle = onPath ? '#2d5016' : '#9e6b7a';
+    ctx.textAlign = 'center';
+
+    // label background pill
+    const tw = ctx.measureText(loc.name).width;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.roundRect(x+ox - tw/2 - 4, y+oy - 12, tw + 8, 16, 6);
+    ctx.fill();
+
+    ctx.fillStyle = onPath ? '#2d5016' : '#9e6b7a';
+    ctx.font = `${onPath ? '800' : '600'} 11px Nunito, sans-serif`;
+    ctx.fillText(loc.name, x+ox, y+oy);
+  });
+}
+
+// ── API CALLS ─────────────────────────────────────────────────
+async function loadLocations() {
+  try {
+    const res = await fetch(`${API}/locations`);
+    if (!res.ok) throw new Error();
+    locations = await res.json();
+    populateSelects();
+    setStatus(true);
+    drawGraph();
+    findRoute();
+  } catch {
+    setStatus(false);
+    // fallback: use hardcoded names so canvas still works
+    locations = [
+      {id:0,name:"Gulberg"},{id:1,name:"Liberty Market"},{id:2,name:"Mall Road"},
+      {id:3,name:"Badshahi Mosque"},{id:4,name:"Anarkali Bazaar"},{id:5,name:"DHA Phase 5"},
+      {id:6,name:"Johar Town"},{id:7,name:"Allama Iqbal Airport"},{id:8,name:"Railway Station"},
+      {id:9,name:"Model Town"}
+    ];
+    populateSelects();
+    drawGraph();
+  }
+}
+
+async function findRoute() {
+  const src  = parseInt(document.getElementById('srcSelect').value);
+  const dest = parseInt(document.getElementById('destSelect').value);
+  const btn = document.getElementById('findBtn');
+  const btnText = document.getElementById('btnText');
+  const spinner = document.getElementById('spinner');
+  const card = document.getElementById('resultCard');
+
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  spinner.style.display = 'block';
+
+  currentSrc = src; currentDest = dest;
+  currentPath = [];
+  drawGraph();
+
+  try {
+    const res = await fetch(`${API}/route?src=${src}&dest=${dest}`);
+    if (!res.ok) throw new Error('Server error');
+    const data = await res.json();
+
+    if (!data.found) {
+      showError(data.message || 'No route found.');
+    } else {
+      // get indices from names for canvas animation
+      const pathIds = data.path.map(name => locations.findIndex(l => l.name === name));
+      animatePath(pathIds);
+      showResult(data);
+    }
+  } catch {
+    showError('warning: Cannot reach backend. Start Spring Boot on port 8080.');
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'block';
+    spinner.style.display = 'none';
+  }
+}
+
+function animatePath(pathIds) {
+  let step = 0;
+  function frame() {
+    step++;
+    currentPath = pathIds.slice(0, step);
+    drawGraph();
+    if (step < pathIds.length) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function showResult(data) {
+  const card = document.getElementById('resultCard');
+  const content = document.getElementById('resultContent');
+  card.className = 'result-card show';
+
+  const icons = ['','','','','','','','',''];
+  let stepsHTML = data.path.map((name, i) => {
+    const isLast = i === data.path.length - 1;
+    const icon = i === 0 ? '' : isLast ? '' : '';
+    const delay = i * 70;
+    let km = '';
+    if (!isLast) {
+      // find edge weight
+      const curId = locations.findIndex(l => l.name === name);
+      const nextId = locations.findIndex(l => l.name === data.path[i+1]);
+      const edge = edgeList.find(([a,b]) => (a===curId&&b===nextId)||(b===curId&&a===nextId));
+      if (edge) km = `<span class="step-km">→ ${edge[2]} km</span>`;
+    }
+    return `<div class="step-row" style="animation-delay:${delay}ms">
+      <span class="step-icon">${icon}</span>
+      <span class="step-name">${name}</span>
+      ${km}
+    </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="dist-badge"> ${data.totalDistance.toFixed(1)} km</div>
+    <div class="path-steps">${stepsHTML}</div>
+  `;
+}
+
+function showError(msg) {
+  const card = document.getElementById('resultCard');
+  const content = document.getElementById('resultContent');
+  card.className = 'result-card show error';
+  content.innerHTML = `<div style="color:#e05555;font-size:13px;font-weight:700">${msg}</div>`;
+}
+
+function populateSelects() {
+  const src  = document.getElementById('srcSelect');
+  const dest = document.getElementById('destSelect');
+  src.innerHTML = dest.innerHTML = '';
+  locations.forEach(l => {
+    src.innerHTML  += `<option value="${l.id}">${l.name}</option>`;
+    dest.innerHTML += `<option value="${l.id}">${l.name}</option>`;
+  });
+  src.value = 0; dest.value = 3;
+}
+
+function swapLocations() {
+  const s = document.getElementById('srcSelect');
+  const d = document.getElementById('destSelect');
+  const tmp = s.value; s.value = d.value; d.value = tmp;
+  findRoute();
+}
+
+function setStatus(online) {
+  const dot  = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = `status-dot ${online ? 'online' : 'offline'}`;
+  text.textContent = online ? 'Backend connected ✓' : 'Backend offline — using fallback mode';
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('resize', resize);
+resize();
+loadLocations();
+</script>
+</body>
+</html>
